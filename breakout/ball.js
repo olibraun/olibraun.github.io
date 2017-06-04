@@ -23,7 +23,17 @@ function Ball(){
       this.dir.y *= -1;
     }
 
-    //Check to see if the ball hits any one of the blocks and adjust direction accordingly
+    if(this.pos.y < 0.7*paddleheight){
+      //Check to see if the ball hits any one of the blocks and adjust direction accordingly
+      for(var i=ncols-1;i>=0;i--){
+        for(var j=3;j>=0;j--){
+          if(this.hitsBlock(i,j)){
+            console.log("HIT");
+            this.dir.y *= -1;
+          }
+        }
+      }
+    }
 
 
     //Update to generate movement
@@ -66,4 +76,33 @@ function Ball(){
       this.dir.setMag(this.speed);
     }
   }
+
+  this.hitsBlock = function(i,j){
+    var temp = new Block(i,j);
+    if(temp.contains(this.pos.x,this.pos.y)){
+      blocks[i][j].kill();
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+  // this.hitsBlock = function(i,j){
+  //   //console.log("called");
+  //   //hit from below?
+  //   var bpos;
+  //   bpos = createVector(i*(blockwidth+blockspacing)+blockspacing,j*(blockheight+blockspacing)+blockspacing);
+  //   if(!donedebugging){
+  //     console.log(bpos);
+  //     console.log(blockheight);
+  //     console.log(blockwidth);
+  //     console.log(this.pos);
+  //     donedebugging=true;
+  //   }
+  //   if(this.pos.y <= bpos.y+blockheight && this.pos.y >= bpos.y+blockheight+6 && this.pos.x <= bpos.x+blockwidth && this.pos.x >= bpos.x){
+  //     return true;
+  //   }else{
+  //     return false;
+  //   }
+  // }
 }

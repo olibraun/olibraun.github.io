@@ -20,14 +20,16 @@ var ncols;
 var ball;
 var blocks;
 
+var donedebugging = false;
+
 function setup() {
   createCanvas(700,400);
   paddle = new Paddle();
   ball = new Ball();
   ncols = floor( (width-blockspacing)/(blockspacing+blockwidth) );
   blocks = make2DArray(ncols,4);
-  for(var i=0;i<ncols;i++){
-    for(var j=0;j<4;j++){
+  for(var i=ncols-1;i>=0;i--){
+    for(var j=3;j>=0;j--){
       var pos = createVector();
       blocks[i][j] = new Block(i,j);
     }
@@ -38,8 +40,8 @@ function draw() {
   background(51);
   //stroke(251);
   //line(width/2,0,width/2,height);
-  for(var i=0;i<ncols;i++){
-    for(var j=0;j<4;j++){
+  for(var i=ncols-1;i>=0;i--){
+    for(var j=3;j>=0;j--){
       blocks[i][j].show();
     }
   }

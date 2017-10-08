@@ -1,5 +1,6 @@
 //Sketch-Datei für Rullo
 let manager;
+let mouseTimer;
 
 function setup() {
   createCanvas(500,700);
@@ -12,6 +13,15 @@ function draw() {
   manager.show();
 }
 
-function mouseClicked(){
-  manager.mouseAction();
+function mousePressed(){
+  mouseTimer = new Date();
+}
+
+function mouseReleased(){
+  let now = new Date();
+  if(now-mouseTimer > 350){
+    manager.mouseAction("LONG");
+  }else{
+    manager.mouseAction("SHORT");
+  }
 }

@@ -4,6 +4,7 @@ winScreen = function(){
     noStroke();
     textAlign(CENTER,CENTER);
     textSize(35);
+    textStyle(NORMAL);
     text("You win, congratulations!\nPlease click to play again.",width/2,height/2);
   }
 }

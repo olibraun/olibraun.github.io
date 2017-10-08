@@ -29,6 +29,10 @@ num = function(x,y){
     this.active = true;
   }
 
+  this.getLocked = function(){
+    return this.locked;
+  }
+
   this.switchLocked = function(){
     this.locked = !this.locked;
   }
@@ -66,6 +70,7 @@ num = function(x,y){
     noStroke();
     textAlign(CENTER,CENTER);
     textSize(20);
+    textStyle(NORMAL);
     text(str(this.value),this.pos.x,this.pos.y);
   }
 }

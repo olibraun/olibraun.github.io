@@ -1,6 +1,8 @@
 rec = function(x,y){
   this.pos = createVector(x,y);
   this.value = 0;
+  this.displayValue = 0;
+  this.displayActive = false;
   this.targetReached = false;
 
   this.setValue = function(n){
@@ -23,6 +25,20 @@ rec = function(x,y){
     let X = this.pos.x;
     let Y = this.pos.y;
     return (abs(X-x) < 26 && abs(Y-y) < 26);
+  }
+
+  this.displayCurrent = function(n){
+    this.displayValue = n;
+    this.displayActive = true;
+    this.timer = 70;
+  }
+
+  this.update = function(){
+    if(this.timer > 0){
+      this.timer--;
+    }else{
+      this.displayActive = false;
+    }
   }
 
   this.show = function(){
@@ -50,6 +66,11 @@ rec = function(x,y){
     noStroke();
     textAlign(CENTER,CENTER);
     textSize(20);
-    text(str(this.value),this.pos.x,this.pos.y);
+    textStyle(NORMAL);
+    if(!this.displayActive){
+      text(str(this.value),this.pos.x,this.pos.y);
+    }else{
+      text("="+str(this.displayValue),this.pos.x,this.pos.y);
+    }
   }
 }

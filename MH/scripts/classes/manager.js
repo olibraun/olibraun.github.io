@@ -12,25 +12,32 @@ class gameManager{
     this.backLayer = [];
     this.middleLayer = [];
     this.frontLayer = [];
+    this.hugeLayer = [];
     this.scoreDisplays = [];
+
+    //Call updateTimer every 1000 milliseconds automatically
+    setInterval(this.updateTimer.bind(this),1000);
   }
 
   start(){
+    noCursor();
     snd_song.stop();
     this.backLayer = [];
     this.middleLayer = [];
     this.frontLayer = [];
+    this.hugeLayer = [];
     this.scoreDisplays = [];
     this.gun.reload();
     this.screenState="PLAYING";
+    this.score = 0;
     this.gameTime = 90;
-    setInterval(this.updateTimer.bind(this),1000);
   }
 
   update(){
     if(this.gameTime <= 0){
       this.screenState = "WIN";
       this.winScreen = new winScreen(this.score);
+      cursor();
     }
     if(this.screenState === "PLAYING"){
       //Generate new chickens
@@ -51,6 +58,10 @@ class gameManager{
             break;
         }
       }
+      //Generate huge chickens
+      if(random(1)<0.001 && this.hugeLayer.length == 0){
+        this.hugeLayer.push(new huge_chicken());
+      }
 
       //Update and, if necessary, remove chickens
       for(let i=this.backLayer.length-1; i >= 0; i--){
@@ -69,6 +80,12 @@ class gameManager{
         this.frontLayer[i].update();
         if(this.frontLayer[i].offScreen()){
           this.frontLayer.splice(i,1);
+        }
+      }
+      for(let i=this.hugeLayer.length-1; i >= 0; i--){
+        this.hugeLayer[i].update();
+        if(this.hugeLayer[i].offScreen()){
+          this.hugeLayer.splice(i,1);
         }
       }
       //If appropriate, remove score displays
@@ -95,7 +112,17 @@ class gameManager{
         if(gun_result){
           //Make sure we only kill one chicken per click
           let chicken_killed = false;
-          //Kill the front chickens first
+          //Kill the front chickens first -- after the huge ghicken
+          for(let i=this.hugeLayer.length-1; i >= 0; i--){
+            if(this.hugeLayer[i].hits(mouseX,mouseY) && !chicken_killed && this.hugeLayer[i].alive){
+              this.hugeLayer[i].alive = false;
+              snd_big_chicken_shot.play();
+              chicken_killed = true;
+              this.scoreDisplays.push(new scoreDisplay("30",x,y) );
+              this.score += 30;
+              break;
+            }
+          }
           for(let i=this.frontLayer.length-1; i >= 0; i--){
             if(this.frontLayer[i].hits(mouseX,mouseY) && !chicken_killed && this.frontLayer[i].alive){
               this.frontLayer[i].alive = false;
@@ -135,6 +162,10 @@ class gameManager{
     }
   }
 
+  rightMouseAction(x,y){
+    this.gun.reload();
+  }
+
   keyboardAction(keycode){
     if(keycode == '32'){
       //Spacebar
@@ -142,7 +173,7 @@ class gameManager{
     }
   }
 
-  show(){
+  show(x,y){
     switch(this.screenState){
       case "TITLE":
         this.title.show();
@@ -163,6 +194,9 @@ class gameManager{
         for(let i=this.frontLayer.length-1; i >= 0; i--){
           this.frontLayer[i].show();
         }
+        for(let i=this.hugeLayer.length-1; i >= 0; i--){
+          this.hugeLayer[i].show();
+        }
         for(let i=this.scoreDisplays.length-1; i >= 0; i--){
           this.scoreDisplays[i].updateAndShow();
         }
@@ -178,6 +212,8 @@ class gameManager{
 
         textAlign(LEFT,TOP);
         text(convertSeconds(this.gameTime),0,0);
+
+        crosshair(mouseX,mouseY);
         break;
 
       case "WIN":

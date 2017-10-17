@@ -41,11 +41,20 @@ function setup() {
 
 function draw() {
   manager.update();
-  manager.show();
+  manager.show(mouseX,mouseY);
 }
 
 function mousePressed(){
-  manager.mouseAction(mouseX,mouseY);
+  switch(mouseButton){
+    default:
+    case LEFT:
+      manager.mouseAction(mouseX,mouseY);
+      break;
+
+    case RIGHT:
+      manager.rightMouseAction(mouseX,mouseY);
+  }
+
 }
 
 function keyPressed(){

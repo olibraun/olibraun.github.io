@@ -5,7 +5,7 @@ class gameManager{
     this.score = 0;
     this.gameTime = 999999;
 
-    this.title = new titleScreen();
+    this.title = new titleScreen(this);
     this.winScreen = null;
     this.gun = new Gun();
 
@@ -20,7 +20,6 @@ class gameManager{
   }
 
   start(){
-    noCursor();
     snd_song.stop();
     this.backLayer = [];
     this.middleLayer = [];
@@ -34,10 +33,9 @@ class gameManager{
   }
 
   update(){
-    if(this.gameTime <= 0){
+    if(this.gameTime <= 0 && this.screenState != "WIN"){
       this.screenState = "WIN";
       this.winScreen = new winScreen(this.score);
-      cursor();
     }
     if(this.screenState === "PLAYING"){
       //Generate new chickens
@@ -104,7 +102,7 @@ class gameManager{
   mouseAction(x,y){
     switch(this.screenState){
       case "TITLE":
-        this.start();
+        this.title.mouseAction(x,y);
         break;
 
       case "PLAYING":
@@ -157,7 +155,7 @@ class gameManager{
         break;
 
       case "WIN":
-        this.start();
+        this.winScreen.mouseAction(x,y,this);
         break;
     }
   }
@@ -185,19 +183,22 @@ class gameManager{
           snd_background.play();
         }
 
-        for(let i=this.backLayer.length-1; i >= 0; i--){
+        //Call the show-functions in a forward loop
+        //This way it is properly matched with the backwards shooting loop
+        //I.e. shooting kills the first bird to be seen...
+        for(let i=0; i < this.backLayer.length; i++){
           this.backLayer[i].show();
         }
-        for(let i=this.middleLayer.length-1; i >= 0; i--){
+        for(let i=0; i < this.middleLayer.length; i++){
           this.middleLayer[i].show();
         }
-        for(let i=this.frontLayer.length-1; i >= 0; i--){
+        for(let i=0; i < this.frontLayer.length; i++){
           this.frontLayer[i].show();
         }
-        for(let i=this.hugeLayer.length-1; i >= 0; i--){
+        for(let i=0; i < this.hugeLayer.length; i++){
           this.hugeLayer[i].show();
         }
-        for(let i=this.scoreDisplays.length-1; i >= 0; i--){
+        for(let i=0; i < this.scoreDisplays.length; i++){
           this.scoreDisplays[i].updateAndShow();
         }
 
@@ -213,7 +214,6 @@ class gameManager{
         textAlign(LEFT,TOP);
         text(convertSeconds(this.gameTime),0,0);
 
-        crosshair(mouseX,mouseY);
         break;
 
       case "WIN":

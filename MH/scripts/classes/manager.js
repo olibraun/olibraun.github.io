@@ -7,6 +7,8 @@ class gameManager{
 
     this.title = new titleScreen(this);
     this.winScreen = null;
+    this.highScoreScreen = new HighScoreScreen(this);
+
     this.gun = new Gun();
 
     this.backLayer = [];
@@ -39,7 +41,7 @@ class gameManager{
     }
     if(this.screenState === "PLAYING"){
       //Generate new chickens
-      if(random(1) < 0.009){
+      if(random(1) < 0.02){
         let temp_kind = random(["FRONT","MIDDLE","BACK"]);
         let temp_chicken = new Chicken( temp_kind , random(["RIGHT_TO_LEFT","LEFT_TO_RIGHT"]) );
         switch(temp_kind){
@@ -57,35 +59,19 @@ class gameManager{
         }
       }
       //Generate huge chickens
-      if(random(1)<0.001 && this.hugeLayer.length == 0){
+      if(random(1)<0.002 && this.hugeLayer.length == 0){
         this.hugeLayer.push(new huge_chicken());
       }
 
       //Update and, if necessary, remove chickens
-      for(let i=this.backLayer.length-1; i >= 0; i--){
-        this.backLayer[i].update();
-        if(this.backLayer[i].offScreen()){
-          this.backLayer.splice(i,1);
+      [this.backLayer,this.middleLayer,this.frontLayer,this.hugeLayer].forEach(layer => {
+        for(let i=layer.length-1; i >= 0; i--){
+          layer[i].update();
+          if(layer[i].offScreen()){
+            layer.splice(i,1);
+          }
         }
-      }
-      for(let i=this.middleLayer.length-1; i >= 0; i--){
-        this.middleLayer[i].update();
-        if(this.middleLayer[i].offScreen()){
-          this.middleLayer.splice(i,1);
-        }
-      }
-      for(let i=this.frontLayer.length-1; i >= 0; i--){
-        this.frontLayer[i].update();
-        if(this.frontLayer[i].offScreen()){
-          this.frontLayer.splice(i,1);
-        }
-      }
-      for(let i=this.hugeLayer.length-1; i >= 0; i--){
-        this.hugeLayer[i].update();
-        if(this.hugeLayer[i].offScreen()){
-          this.hugeLayer.splice(i,1);
-        }
-      }
+      });
       //If appropriate, remove score displays
       for(let i=this.scoreDisplays.length-1; i >= 0; i--){
         if(this.scoreDisplays[i].timer < 0){
@@ -110,58 +96,61 @@ class gameManager{
         if(gun_result){
           //Make sure we only kill one chicken per click
           let chicken_killed = false;
-          //Kill the front chickens first -- after the huge ghicken
-          for(let i=this.hugeLayer.length-1; i >= 0; i--){
-            if(this.hugeLayer[i].hits(mouseX,mouseY) && !chicken_killed && this.hugeLayer[i].alive){
-              this.hugeLayer[i].alive = false;
-              snd_big_chicken_shot.play();
-              chicken_killed = true;
-              this.scoreDisplays.push(new scoreDisplay("30",x,y) );
-              this.score += 30;
-              break;
-            }
-          }
-          for(let i=this.frontLayer.length-1; i >= 0; i--){
-            if(this.frontLayer[i].hits(mouseX,mouseY) && !chicken_killed && this.frontLayer[i].alive){
-              this.frontLayer[i].alive = false;
-              snd_chicken_hit_close.play();
-              chicken_killed = true;
-              this.scoreDisplays.push(new scoreDisplay("5",x,y) );
-              this.score += 5;
-              break;
-            }
-          }
-          for(let i=this.middleLayer.length-1; i >= 0; i--){
-            if(this.middleLayer[i].hits(mouseX,mouseY) && !chicken_killed && this.middleLayer[i].alive){
-              this.middleLayer[i].alive = false;
-              snd_chicken_hit_mid.play();
-              chicken_killed = true;
-              this.scoreDisplays.push(new scoreDisplay("10",x,y) );
-              this.score += 10;
-              break;
-            }
-          }
-          for(let i=this.backLayer.length-1; i >= 0; i--){
-            if(this.backLayer[i].hits(mouseX,mouseY) && !chicken_killed && this.backLayer[i].alive){
-              this.backLayer[i].alive = false;
-              snd_chicken_hit_far.play();
-              chicken_killed = true;
-              this.scoreDisplays.push(new scoreDisplay("25",x,y) );
-              this.score += 25;
-              break;
+          //Kill the front chickens first -- after the huge chicken
+          //Use a for-of-Loop which is guaranteed to go through the array in order (ES6 specification)
+          const layerArray = [this.hugeLayer,this.frontLayer,this.middleLayer,this.backLayer];
+          for(let layer of layerArray){
+            for(let i=layer.length-1; i >= 0; i--){
+              if(layer[i].hits(mouseX,mouseY) && !chicken_killed && layer[i].alive){
+                layer[i].alive = false;
+                chicken_killed = true;
+                switch(layer){
+                  case this.hugeLayer:
+                  snd_big_chicken_shot.play();
+                  this.scoreDisplays.push(new scoreDisplay("30",x,y) );
+                  this.score += 30;
+                  break;
+
+                  case this.frontLayer:
+                  snd_chicken_hit_close.play();
+                  this.scoreDisplays.push(new scoreDisplay("5",x,y) );
+                  this.score += 5;
+                  break;
+
+                  case this.middleLayer:
+                  snd_chicken_hit_mid.play();
+                  this.scoreDisplays.push(new scoreDisplay("10",x,y) );
+                  this.score += 10;
+                  break;
+
+                  case this.backLayer:
+                  snd_chicken_hit_far.play();
+                  this.scoreDisplays.push(new scoreDisplay("25",x,y) );
+                  this.score += 25;
+                  break;
+                }
+                
+                break;
+              }
             }
           }
         }
         break;
-
+          
       case "WIN":
         this.winScreen.mouseAction(x,y,this);
+        break;
+
+      case "HIGHSCORE":
+        this.highScoreScreen.mouseAction(x,y);
         break;
     }
   }
 
   rightMouseAction(x,y){
-    this.gun.reload();
+    if(this.screenState == "PLAYING"){
+      this.gun.reload();
+    }
   }
 
   keyboardAction(keycode){
@@ -186,21 +175,11 @@ class gameManager{
         //Call the show-functions in a forward loop
         //This way it is properly matched with the backwards shooting loop
         //I.e. shooting kills the first bird to be seen...
-        for(let i=0; i < this.backLayer.length; i++){
-          this.backLayer[i].show();
-        }
-        for(let i=0; i < this.middleLayer.length; i++){
-          this.middleLayer[i].show();
-        }
-        for(let i=0; i < this.frontLayer.length; i++){
-          this.frontLayer[i].show();
-        }
-        for(let i=0; i < this.hugeLayer.length; i++){
-          this.hugeLayer[i].show();
-        }
-        for(let i=0; i < this.scoreDisplays.length; i++){
-          this.scoreDisplays[i].updateAndShow();
-        }
+        [this.backLayer,this.middleLayer,this.frontLayer,this.hugeLayer,this.scoreDisplays].forEach(layer => {
+          for(let i=0; i < layer.length; i++){
+            layer[i].show();
+          }
+        });
 
         this.gun.show();
 
@@ -218,6 +197,10 @@ class gameManager{
 
       case "WIN":
         this.winScreen.show();
+        break;
+
+      case "HIGHSCORE":
+        this.highScoreScreen.show();
         break;
     }
   }
